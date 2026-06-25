@@ -288,16 +288,40 @@ function showToast(message, isError = false) {
 }
 
 // Play Live Stream with Hls.js or Mpegts.js
-function playStream(url, name, group, logo) {
+async function playStream(url, name, group, logo) {
     // Show player elements, hide placeholder
     playerPlaceholder.style.display = 'none';
     playerInfo.style.display = 'flex';
     
-    // Check if we should use proxy
     const useProxy = useProxyCheckbox ? useProxyCheckbox.checked : false;
     const proxyBase = window.location.origin.startsWith('http') ? window.location.origin : 'http://localhost:3000';
-    const playUrl = useProxy ? `${proxyBase}/proxy?url=${encodeURIComponent(url)}` : url;
-    
+
+    // For non-HLS streams, use /hls (FFmpeg transcoding) instead of /proxy
+    const isHlsUrl = url.toLowerCase().includes('m3u8');
+    let playUrl;
+    if (useProxy) {
+        if (isHlsUrl) {
+            playUrl = `${proxyBase}/proxy?url=${encodeURIComponent(url)}`;
+        } else {
+            playUrl = `${proxyBase}/hls?url=${encodeURIComponent(url)}`;
+        }
+    } else {
+        playUrl = url;
+    }
+
+    // Ping the server first to make sure proxy is alive
+    if (useProxy) {
+        try {
+            const ping = await fetch(`${proxyBase}/ping`, { signal: AbortSignal.timeout(4000) });
+            if (!ping.ok) throw new Error('ping failed');
+        } catch (e) {
+            streamStatus.textContent = 'السيرفر غير متاح';
+            streamStatus.className = 'badge badge-live';
+            showToast('تعذّر الوصول إلى الخادم الوسيط. تأكد من أن السيرفر يعمل.', true);
+            return;
+        }
+    }
+
     // Set meta
     playingLogo.src = logo;
     playingName.textContent = name;
@@ -328,7 +352,7 @@ function playStream(url, name, group, logo) {
     streamStatus.textContent = 'جاري الاتصال...';
     streamStatus.className = 'badge badge-live';
 
-    const isHls = url.toLowerCase().includes('m3u8');
+    const isHls = isHlsUrl;
 
     // 1. Play HLS Streams (.m3u8) using Hls.js
     if (isHls) {

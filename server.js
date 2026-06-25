@@ -91,10 +91,15 @@ const server = http.createServer((req, res) => {
                     return;
                 }
 
-                // Forward status code and content-type
+                // Forward status code and content-type + include CORS headers explicitly
                 res.writeHead(proxyRes.statusCode, {
-                    'Content-Type': proxyRes.headers['content-type'] || 'application/octet-stream',
-                    'Cache-Control': 'no-cache'
+                    'Content-Type': proxyRes.headers['content-type'] || 'video/MP2T',
+                    'Cache-Control': 'no-cache, no-store',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers': '*',
+                    'Connection': 'keep-alive',
+                    'Transfer-Encoding': 'chunked'
                 });
 
                 proxyRes.pipe(res);

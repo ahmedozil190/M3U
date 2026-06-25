@@ -387,11 +387,25 @@ function playStream(url, name, group, logo) {
     // 2. Play TS and other formats using Mpegts.js (IPTV links are mostly TS format)
     else {
         if (mpegts.getFeatureList().mseLivePlayback) {
-            currentMpegtsPlayer = mpegts.createPlayer({
-                type: 'mse',
-                isLive: true,
-                url: playUrl
-            });
+            currentMpegtsPlayer = mpegts.createPlayer(
+                {
+                    type: 'mpegts',
+                    isLive: true,
+                    url: playUrl,
+                    hasAudio: true,
+                    hasVideo: true,
+                    cors: true,
+                    withCredentials: false
+                },
+                {
+                    enableWorker: false,
+                    lazyLoad: false,
+                    liveBufferLatencyChasing: true,
+                    liveBufferLatencyMaxLatency: 10,
+                    liveBufferLatencyMinRemain: 0.5,
+                    fixAudioTimestampGap: true
+                }
+            );
             currentMpegtsPlayer.attachMediaElement(videoPlayer);
             currentMpegtsPlayer.load();
             currentMpegtsPlayer.play().then(() => {
@@ -402,13 +416,13 @@ function playStream(url, name, group, logo) {
                 tryDirectPlay(playUrl);
             });
 
-            currentMpegtsPlayer.on(mpegts.ErrorTypes.NETWORK_ERROR, (e) => {
-                console.error('Mpegts network error:', e);
-                streamStatus.textContent = 'خطأ شبكة TS';
-            });
-            currentMpegtsPlayer.on(mpegts.ErrorTypes.MEDIA_ERROR, (e) => {
-                console.error('Mpegts media error:', e);
-                streamStatus.textContent = 'خطأ فك ترميز TS';
+            currentMpegtsPlayer.on(mpegts.Events.ERROR, (errType, errDetail) => {
+                console.error('Mpegts error:', errType, errDetail);
+                if (errType === mpegts.ErrorTypes.NETWORK_ERROR) {
+                    streamStatus.textContent = 'خطأ شبكة TS';
+                } else if (errType === mpegts.ErrorTypes.MEDIA_ERROR) {
+                    streamStatus.textContent = 'خطأ فك ترميز TS';
+                }
             });
         } else {
             tryDirectPlay(playUrl);

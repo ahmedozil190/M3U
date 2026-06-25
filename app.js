@@ -425,6 +425,11 @@ function tryDirectPlay(playUrl) {
     }).catch(err => {
         console.error('Direct play error:', err);
         streamStatus.textContent = 'فشل التشغيل';
-        showToast('فشل تشغيل القناة. تأكد من تشغيل الخادم المحلي server.js وصلاحية الرابط.', true);
+        const isProxy = useProxyCheckbox && useProxyCheckbox.checked;
+        if (!isProxy) {
+            showToast('فشل التشغيل. حاول تفعيل "الخادم الوسيط (CORS Proxy)" ثم أعد المحاولة.', true);
+        } else {
+            showToast('فشل تشغيل القناة. قد يكون الرابط محجوباً أو منتهي الصلاحية.', true);
+        }
     });
 }

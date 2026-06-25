@@ -1,0 +1,16 @@
+{
+  "name": "m3u-stream-extractor",
+  "version": "1.0.0",
+  "description": "M3U Stream Extractor & CORS Proxy Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["iptv", "m3u", "stream", "proxy"],
+  "author": "ahmedozil190",
+  "license": "MIT"
+}
